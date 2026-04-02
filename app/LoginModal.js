@@ -1,13 +1,8 @@
-import { makeRedirectUri } from 'expo-auth-session';
-import * as Google from 'expo-auth-session/providers/google';
-import * as WebBrowser from 'expo-web-browser';
-import { createUserWithEmailAndPassword, GoogleAuthProvider, sendPasswordResetEmail, signInWithCredential, signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendPasswordResetEmail, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { auth, db } from '../firebase';
-
-WebBrowser.maybeCompleteAuthSession();
 
 // Profanity filter (basic)
 const badWords = ['fuck', 'shit', 'ass', 'bitch', 'cunt', 'damn', 'hell', 'nigga', 'nigger'];
@@ -35,7 +30,6 @@ const validateEmail = (email) => {
 const ADMIN_EMAILS = ['123@test.com', 'test@123.com', 'oglebrent0@gmail.com', 'ogledevan13@gmail.com', 'robertogle74@gmail.com', 'galiogle77@gmail.com'];
 
 export default function LoginModal({ visible, onClose, onLoginSuccess }) {
-  // Email/Password state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -44,109 +38,8 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
   const [isResetMode, setIsResetMode] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  
-  // Google Sign-In state
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const [pendingGoogleUser, setPendingGoogleUser] = useState(null);
-  const [showNameModal, setShowNameModal] = useState(false);
-  const [tempDisplayName, setTempDisplayName] = useState('');
 
-  // Google OAuth configuration
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: '688931952557-fs8r88t59qech3iplu5dgigs1lm635if.apps.googleusercontent.com',
-    iosClientId: '',
-    expoClientId: '688931952557-jqutvr6m2g73uov59573vgb9cu5l7fod.apps.googleusercontent.com',
-    redirectUri: makeRedirectUri({
-      scheme: 'fuelup',
-      useProxy: true,
-    }),
-  });
-
-  // Handle Google Sign-In response
-  useState(() => {
-    if (response?.type === 'success') {
-      setGoogleLoading(true);
-      const { id_token } = response.params;
-      const credential = GoogleAuthProvider.credential(id_token);
-      signInWithCredential(auth, credential)
-        .then(async (userCredential) => {
-          const user = userCredential.user;
-          
-          // Check if user is blocked
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
-          if (userDoc.exists() && userDoc.data().blocked === true) {
-            Alert.alert('Account Blocked', 'This account has been blocked.');
-            await auth.signOut();
-            setGoogleLoading(false);
-            return;
-          }
-          
-          // If new user, ask for display name
-          if (!userDoc.exists()) {
-            setPendingGoogleUser(user);
-            setShowNameModal(true);
-            setGoogleLoading(false);
-            return;
-          }
-          
-          // Existing user - check if they have a display name
-          if (!userDoc.data().displayName) {
-            setPendingGoogleUser(user);
-            setShowNameModal(true);
-            setGoogleLoading(false);
-            return;
-          }
-          
-          onLoginSuccess(user);
-          onClose();
-        })
-        .catch((error) => {
-          console.error('Google login error:', error);
-          Alert.alert('Login Failed', error.message);
-        })
-        .finally(() => {
-          setGoogleLoading(false);
-        });
-    }
-  }, [response]);
-
-  const completeGoogleSignUp = async () => {
-    const validation = validateDisplayName(tempDisplayName);
-    if (!validation.valid) {
-      Alert.alert('Invalid Display Name', validation.message);
-      return;
-    }
-    
-    setLoading(true);
-    try {
-      // Check if this email should be admin
-      const isAdmin = ADMIN_EMAILS.includes(pendingGoogleUser.email);
-      
-      await setDoc(doc(db, 'users', pendingGoogleUser.uid), {
-        email: pendingGoogleUser.email,
-        displayName: tempDisplayName.trim(),
-        createdAt: new Date(),
-        blocked: false,
-        totalUpdates: 0,
-        lastActive: new Date(),
-        isAdmin: isAdmin
-      });
-      
-      onLoginSuccess(pendingGoogleUser);
-      setShowNameModal(false);
-      setTempDisplayName('');
-      setPendingGoogleUser(null);
-      onClose();
-    } catch (error) {
-      console.error('Google signup error:', error);
-      Alert.alert('Error', 'Failed to save user data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Email/Password Sign Up or Sign In
-  const handleEmailSubmit = async () => {
+  const handleSubmit = async () => {
     // Email validation
     const emailValidation = validateEmail(email);
     if (!emailValidation.valid) {
@@ -229,9 +122,7 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
     }
   };
 
-  // Forgot Password
   const handleResetPassword = async () => {
-    // Email validation
     const emailValidation = validateEmail(resetEmail);
     if (!emailValidation.valid) {
       Alert.alert('Invalid Email', emailValidation.message);
@@ -255,38 +146,6 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
       setLoading(false);
     }
   };
-
-  // Name selection modal for existing users without display name
-  if (showNameModal) {
-    return (
-      <Modal visible={visible} transparent={true} animationType="fade" onRequestClose={onClose}>
-        <View style={styles.overlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.title}>Choose Your Name</Text>
-            <Text style={styles.message}>
-              Please choose a display name that will appear next to your price updates.
-            </Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Display Name (3-20 characters)"
-              placeholderTextColor="#64748b"
-              value={tempDisplayName}
-              onChangeText={setTempDisplayName}
-              autoCapitalize="words"
-              maxLength={20}
-            />
-            <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDisabled]}
-              onPress={completeGoogleSignUp}
-              disabled={loading}
-            >
-              {loading ? <ActivityIndicator color="white" /> : <Text style={styles.buttonText}>Continue</Text>}
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-    );
-  }
 
   // Reset Modal (for forgot password)
   if (isResetMode) {
@@ -333,31 +192,6 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
             {isSignUp ? 'Create an account to update fuel prices' : 'Sign in to update fuel prices'}
           </Text>
 
-          {/* Google Sign-In Button */}
-          <TouchableOpacity
-            style={[styles.googleButton, googleLoading && styles.buttonDisabled]}
-            onPress={() => promptAsync()}
-            disabled={googleLoading}
-          >
-            {googleLoading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <>
-                <Image 
-                  source={{ uri: 'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg' }}
-                  style={styles.googleIcon}
-                />
-                <Text style={styles.googleButtonText}>Continue with Google</Text>
-              </>
-            )}
-          </TouchableOpacity>
-
-          <View style={styles.dividerContainer}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
           {/* Email/Password Form */}
           <TextInput
             style={styles.input}
@@ -397,7 +231,7 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
 
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
-            onPress={handleEmailSubmit}
+            onPress={handleSubmit}
             disabled={loading}
           >
             {loading ? <ActivityIndicator color="white" /> : <Text style={styles.buttonText}>{isSignUp ? 'Sign Up' : 'Sign In'}</Text>}
@@ -459,43 +293,6 @@ const styles = StyleSheet.create({
     color: '#94a3b8',
     textAlign: 'center',
     marginBottom: 20,
-  },
-  googleButton: {
-    backgroundColor: '#ffffff',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    width: '100%',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  googleIcon: {
-    width: 20,
-    height: 20,
-    marginRight: 12,
-  },
-  googleButtonText: {
-    color: '#1A1F2E',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: 16,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#64748b',
-  },
-  dividerText: {
-    color: '#94a3b8',
-    paddingHorizontal: 10,
-    fontSize: 12,
   },
   input: {
     backgroundColor: '#0B0F1A',
