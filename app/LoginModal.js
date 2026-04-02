@@ -11,15 +11,23 @@ WebBrowser.maybeCompleteAuthSession();
 
 // Profanity filter (basic)
 const badWords = ['fuck', 'shit', 'ass', 'bitch', 'cunt', 'damn', 'hell', 'nigga', 'nigger'];
+
 const validateDisplayName = (name) => {
-  if (name.length < 3) return { valid: false, message: 'Name must be at least 3 characters' };
-  if (name.length > 20) return { valid: false, message: 'Name must be less than 20 characters' };
+  if (name.length < 3) return { valid: false, message: 'Display name must be at least 3 characters' };
+  if (name.length > 20) return { valid: false, message: 'Display name must be less than 20 characters' };
   const lowerName = name.toLowerCase();
   for (const badWord of badWords) {
     if (lowerName.includes(badWord)) {
       return { valid: false, message: 'Name contains inappropriate language' };
     }
   }
+  return { valid: true, message: '' };
+};
+
+const validateEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email) return { valid: false, message: 'Email is required' };
+  if (!emailRegex.test(email)) return { valid: false, message: 'Please enter a valid email address' };
   return { valid: true, message: '' };
 };
 
@@ -105,7 +113,7 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
   const completeGoogleSignUp = async () => {
     const validation = validateDisplayName(tempDisplayName);
     if (!validation.valid) {
-      Alert.alert('Invalid Name', validation.message);
+      Alert.alert('Invalid Display Name', validation.message);
       return;
     }
     
@@ -139,6 +147,13 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
 
   // Email/Password Sign Up or Sign In
   const handleEmailSubmit = async () => {
+    // Email validation
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.valid) {
+      Alert.alert('Invalid Email', emailValidation.message);
+      return;
+    }
+
     if (!email || !password) {
       Alert.alert('Error', 'Please enter email and password');
       return;
@@ -147,7 +162,7 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
     if (isSignUp) {
       const validation = validateDisplayName(displayName);
       if (!validation.valid) {
-        Alert.alert('Invalid Name', validation.message);
+        Alert.alert('Invalid Display Name', validation.message);
         return;
       }
     }
@@ -216,6 +231,13 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
 
   // Forgot Password
   const handleResetPassword = async () => {
+    // Email validation
+    const emailValidation = validateEmail(resetEmail);
+    if (!emailValidation.valid) {
+      Alert.alert('Invalid Email', emailValidation.message);
+      return;
+    }
+
     if (!resetEmail) {
       Alert.alert('Error', 'Please enter your email address');
       return;
