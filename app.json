@@ -1,0 +1,59 @@
+{
+  "expo": {
+    "name": "FuelUp",
+    "slug": "fuelup",
+    "version": "19.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon-full.png",
+    "scheme": "fuelup",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "icon": "./assets/icon-full.png"
+    },
+    "android": {
+      "package": "com.robertogle74.fuelup",
+      "versionCode": 1,
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon-foreground.png",
+        "backgroundColor": "#0B0F1A"
+      },
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyCKN-E8wh4_f8zZ1wmiFcXgJ4VeHBMtAPA"
+        }
+      }
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/icon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#0B0F1A"
+        }
+      ],
+      "expo-web-browser",
+      "expo-localization",
+      "expo-location"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "ce633c57-bbcd-4f92-a21d-6190e48ac8c9"
+      }
+    },
+    "owner": "robertogle74"
+  }
+}
