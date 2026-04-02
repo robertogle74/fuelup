@@ -156,44 +156,140 @@ export default function HomeScreen() {
     }
   };
 
-  const syncGaragesWithDB = async (googlePlaces) => {
-    if (!googlePlaces?.length) return;
-    try {
-      const snap = await getDocs(collection(db, "garages"));
-      const existing = new Map();
-      snap.forEach(doc => {
-        const data = doc.data();
-        existing.set(data.place_id, true);
-      });
-      const promises = [];
-      for (const place of googlePlaces) {
-        const placeId = place.place_id;
-        if (!placeId) continue;
-        const data = {
-          place_id: placeId,
-          name: place.name,
-          lat: place.geometry.location.lat,
-          lng: place.geometry.location.lng,
-          lastSeen: new Date()
-        };
-        if (!existing.has(placeId)) {
-          promises.push(
-            setDoc(doc(db, "garages", placeId), {
-              ...data,
-              created: new Date()
-            })
-          );
-        } else {
-          promises.push(
-            setDoc(doc(db, "garages", placeId), data, { merge: true })
-          );
-        }
-      }
-      await Promise.all(promises);
-    } catch (err) {
-      console.log("Garage sync error:", err);
+// Add this helper function at the top of your index.tsx (after imports)
+const getRegionFromCoords = (lat, lng) => {
+  // Coastal areas bounding boxes
+  const coastalAreas = [
+    { minLat: -34.5, maxLat: -33.5, minLng: 18.0, maxLng: 19.0 }, // Cape Town
+    { minLat: -30.0, maxLat: -29.5, minLng: 30.5, maxLng: 31.5 }, // Durban
+    { minLat: -34.2, maxLat: -33.8, minLng: 25.4, maxLng: 25.8 }, // Gqeberha
+    { minLat: -33.2, maxLat: -32.8, minLng: 27.7, maxLng: 28.1 }, // East London
+    { minLat: -34.3, maxLat: -34.0, minLng: 21.9, maxLng: 22.3 }, // Mossel Bay
+    { minLat: -28.8, maxLat: -28.6, minLng: 32.0, maxLng: 32.2 }, // Richards Bay
+  ];
+  
+  for (const area of coastalAreas) {
+    if (lat >= area.minLat && lat <= area.maxLat && 
+        lng >= area.minLng && lng <= area.maxLng) {
+      return 'coastal';
     }
-  };
+  }
+  
+  // Rough approximation: longitudes below 24°E are coastal
+  if (lng < 24) {
+    return 'coastal';
+  }
+  
+  return 'inland';
+};
+
+// Then replace your syncGaragesWithDB function:
+const syncGaragesWithDB = async (googlePlaces) => {
+  if (!googlePlaces?.length) return;
+  
+  try {
+    // Get admin settings for auto-assigning official prices
+    const settingsDoc = await getDoc(doc(db, 'admin_settings', 'fuel_prices'));
+    let adminSettings = null;
+    if (settingsDoc.exists()) {
+      adminSettings = settingsDoc.data();
+    }
+    
+    const snap = await getDocs(collection(db, "garages"));
+    const existing = new Map();
+    snap.forEach(doc => {
+      const data = doc.data();
+      existing.set(data.place_id, true);
+    });
+    
+    const promises = [];
+    let newCount = 0;
+    
+    for (const place of googlePlaces) {
+      const placeId = place.place_id;
+      if (!placeId) continue;
+      
+      const lat = place.geometry.location.lat;
+      const lng = place.geometry.location.lng;
+      const region = getRegionFromCoords(lat, lng);
+      
+      const data = {
+        place_id: placeId,
+        name: place.name,
+        lat: lat,
+        lng: lng,
+        region: region,
+        lastSeen: new Date()
+      };
+      
+      if (!existing.has(placeId)) {
+        console.log(`➕ NEW garage: ${place.name} (${region})`);
+        promises.push(
+          setDoc(doc(db, "garages", placeId), {
+            ...data,
+            created: new Date()
+          })
+        );
+        newCount++;
+        
+        // If admin settings exist, auto-assign official prices to new garage
+        if (adminSettings) {
+          const petrolPrice = region === 'inland' ? adminSettings.inland_petrol : adminSettings.coastal_petrol;
+          const dieselPrice = region === 'inland' ? adminSettings.inland_diesel : adminSettings.coastal_diesel;
+          
+          if (petrolPrice && dieselPrice) {
+            const dieselId = `${placeId}_diesel`;
+            promises.push(
+              setDoc(doc(db, COLLECTION, dieselId), {
+                name: place.name,
+                place_id: placeId,
+                fuelType: "diesel",
+                price: dieselPrice,
+                available: true,
+                timestamp: new Date(),
+                updatedBy: "system",
+                updatedByDisplayName: `Official Rate (${region})`
+              }, { merge: true })
+            );
+            
+            const petrolId = `${placeId}_petrol`;
+            promises.push(
+              setDoc(doc(db, COLLECTION, petrolId), {
+                name: place.name,
+                place_id: placeId,
+                fuelType: "petrol",
+                price: petrolPrice,
+                available: true,
+                timestamp: new Date(),
+                updatedBy: "system",
+                updatedByDisplayName: `Official Rate (${region})`
+              }, { merge: true })
+            );
+            
+            console.log(`💰 Auto-assigned ${region} prices to new garage: ${place.name}`);
+          }
+        }
+      } else {
+        console.log(`🔄 UPDATE garage: ${place.name}`);
+        promises.push(
+          setDoc(doc(db, "garages", placeId), data, { merge: true })
+        );
+      }
+    }
+    
+    console.log(`📊 Found ${newCount} new garages to add`);
+    
+    if (promises.length > 0) {
+      console.log("💾 Saving to Firebase...");
+      await Promise.all(promises);
+      console.log("✅ All garages saved successfully!");
+    } else {
+      console.log("⚠️ No promises to resolve");
+    }
+  } catch (err) {
+    console.log("❌ Garage sync error:", err);
+  }
+};
 
   const fetchStations = async (lat, lng) => {
     setLoading(true);
@@ -606,20 +702,26 @@ export default function HomeScreen() {
                   </Text>
                 </View>
 
-                <View style={{ marginBottom: 8 }}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Text style={{ color: 'white' }}>
-                      Diesel: {d ? d.price > 0 ? `R${d.price.toFixed(2)}` : "No price yet" : "No data"}
-                    </Text>
-                    <Text style={{ color: !d ? '#facc15' : d.available ? '#15803d' : '#b91c1c' }}>
-                      {!d ? "No data yet" : d.available ? "Available" : "Not Available"}
-                    </Text>
-                  </View>
-                  <Text style={{ color: '#94a3b8', fontSize: 12 }}>
-                    Updated: {d ? getTimeAgo(d.timestamp) : "Never"}
-                    {d?.updatedByDisplayName && ` by ${d.updatedByDisplayName}`}
-                  </Text>
-                </View>
+<View style={{ marginBottom: 8 }}>
+  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+    <Text style={{ color: 'white' }}>
+      Diesel: {d ? d.price > 0 ? `R${d.price.toFixed(2)}` : "No price yet" : "No data"}
+    </Text>
+    <Text style={{ color: !d ? '#facc15' : d.available ? '#15803d' : '#b91c1c' }}>
+      {!d ? "No data yet" : d.available ? "Available" : "Not Available"}
+    </Text>
+  </View>
+  <Text style={{ color: '#94a3b8', fontSize: 12 }}>
+    Updated: {d ? getTimeAgo(d.timestamp) : "Never"}
+    {d?.updatedByDisplayName && ` by ${d.updatedByDisplayName}`}
+  </Text>
+  {/* 👇 ADD THIS - Show previous price if exists */}
+  {d?.previousPrice && d.previousPrice > 0 && (
+    <Text style={{ color: '#64748b', fontSize: 10, marginTop: 2 }}>
+      Previous: R{d.previousPrice.toFixed(2)} ({d.previousUpdater || 'Unknown'})
+    </Text>
+  )}
+</View>
 
                 <View style={{ marginBottom: 12 }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
