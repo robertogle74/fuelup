@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
+import { EmailAuthProvider, reauthenticateWithCredential, signOut, updatePassword } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -19,6 +19,7 @@ export default function ProfileScreen() {
   const [changingPassword, setChangingPassword] = useState(false);
   const [user, setUser] = useState(null);
   const [isGoogleUser, setIsGoogleUser] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -41,6 +42,7 @@ export default function ProfileScreen() {
       setDisplayName(data.displayName || '');
       setOriginalName(data.displayName || '');
       setTotalUpdates(data.totalUpdates || 0);
+      setIsAdmin(data.isAdmin === true);
     }
     setLoading(false);
   };
@@ -100,6 +102,16 @@ export default function ProfileScreen() {
     } finally {
       setChangingPassword(false);
     }
+  };
+
+  const handleSignOut = async () => {
+    Alert.alert('Sign Out', 'Are you sure?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Sign Out', style: 'destructive', onPress: async () => {
+        await signOut(auth);
+        router.replace('/');
+      }}
+    ]);
   };
 
   if (loading) {
@@ -199,10 +211,24 @@ export default function ProfileScreen() {
         </View>
       )}
 
-      {/* Bottom Button - Back Only */}
+      {/* Admin Button - only shows if user is admin */}
+      {isAdmin && (
+        <TouchableOpacity
+          style={styles.adminButton}
+          onPress={() => router.push('/AdminScreen')}
+        >
+          <Text style={styles.adminButtonText}>⚙️ Admin Panel</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Bottom Buttons */}
       <View style={styles.bottomButtons}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Text style={styles.backButtonText}>← Back</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+          <Text style={styles.signOutButtonText}>Sign Out</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -232,19 +258,11 @@ const styles = StyleSheet.create({
   infoBox: { backgroundColor: '#1A1F2E', marginHorizontal: 20, marginBottom: 20, padding: 16, borderRadius: 12, alignItems: 'center' },
   infoText: { color: '#15803d', fontSize: 14, fontWeight: '600', marginBottom: 4 },
   infoSubtext: { color: '#94a3b8', fontSize: 12 },
-  bottomButtons: {
-    marginHorizontal: 20,
-    marginBottom: 30,
-  },
-  backButton: {
-    backgroundColor: '#64748b',
-    padding: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  backButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  adminButton: { backgroundColor: '#7c3aed', marginHorizontal: 20, marginBottom: 20, padding: 14, borderRadius: 8, alignItems: 'center' },
+  adminButtonText: { color: 'white', fontSize: 16, fontWeight: '600' },
+  bottomButtons: { flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 20, marginBottom: 30, gap: 10 },
+  backButton: { flex: 1, backgroundColor: '#64748b', padding: 14, borderRadius: 8, alignItems: 'center' },
+  backButtonText: { color: 'white', fontSize: 16, fontWeight: '600' },
+  signOutButton: { flex: 1, backgroundColor: '#b91c1c', padding: 14, borderRadius: 8, alignItems: 'center' },
+  signOutButtonText: { color: 'white', fontSize: 16, fontWeight: '600' },
 });
