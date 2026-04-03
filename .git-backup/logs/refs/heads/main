@@ -1,0 +1,3 @@
+0000000000000000000000000000000000000000 9e65d857868faf4769503e9d6fcc16772da08750 Robert Ogle <robertogle74@gmail.com> 1775121611 +0100	commit (initial): Add authentication features: login modal, profile screen, admin panel, user tracking, hide tab bar
+9e65d857868faf4769503e9d6fcc16772da08750 9e65d857868faf4769503e9d6fcc16772da08750 Robert Ogle <robertogle74@gmail.com> 1775121985 +0100	Branch: renamed refs/heads/feature/authentication to refs/heads/main
+9e65d857868faf4769503e9d6fcc16772da08750 f0a249288c9a887fc72e2c468ceb90c28daa02ae Robert Ogle <robertogle74@gmail.com> 1775122073 +0100	commit: Add README

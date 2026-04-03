@@ -1,0 +1,12 @@
+0000000000000000000000000000000000000000 9e65d857868faf4769503e9d6fcc16772da08750 Robert Ogle <robertogle74@gmail.com> 1775121611 +0100	commit (initial): Add authentication features: login modal, profile screen, admin panel, user tracking, hide tab bar
+9e65d857868faf4769503e9d6fcc16772da08750 0000000000000000000000000000000000000000 Robert Ogle <robertogle74@gmail.com> 1775121985 +0100	Branch: renamed refs/heads/feature/authentication to refs/heads/main
+0000000000000000000000000000000000000000 9e65d857868faf4769503e9d6fcc16772da08750 Robert Ogle <robertogle74@gmail.com> 1775121985 +0100	Branch: renamed refs/heads/feature/authentication to refs/heads/main
+9e65d857868faf4769503e9d6fcc16772da08750 f0a249288c9a887fc72e2c468ceb90c28daa02ae Robert Ogle <robertogle74@gmail.com> 1775122073 +0100	commit: Add README
+f0a249288c9a887fc72e2c468ceb90c28daa02ae f0a249288c9a887fc72e2c468ceb90c28daa02ae Robert Ogle <robertogle74@gmail.com> 1775122275 +0100	checkout: moving from main to feature/authentication
+f0a249288c9a887fc72e2c468ceb90c28daa02ae 10094eb7822d02d2ee4cebfdee5f87d00118dbd1 Robert Ogle <robertogle74@gmail.com> 1775126327 +0100	commit: Add email validation, update error messages to say 'Display name', add auth persistence
+10094eb7822d02d2ee4cebfdee5f87d00118dbd1 cf13e33313a4d0b7d25282e1c6b217ef6f254587 Robert Ogle <robertogle74@gmail.com> 1775127585 +0100	commit: Add admin button to profile screen, update profile with admin check, improve UI
+cf13e33313a4d0b7d25282e1c6b217ef6f254587 e97b5b62a43ea4b1826569f4802777afb1e61117 Robert Ogle <robertogle74@gmail.com> 1775143699 +0100	commit: Remove Google Sign-In, use email/password only
+e97b5b62a43ea4b1826569f4802777afb1e61117 0cc59d6975efc0d5bc847c0d7829a28ea18d70f7 Robert Ogle <robertogle74@gmail.com> 1775150970 +0100	commit: Add official fuel price management: region detection, price history, admin panel updates, auto-assign prices to new garages
+0cc59d6975efc0d5bc847c0d7829a28ea18d70f7 50c6186186b0dec87d0053ddd566e34d300135f7 Robert Ogle <robertogle74@gmail.com> 1775224524 +0100	commit: Add Google Sign-In, fix API key configuration, update garage sync, improve UI
+50c6186186b0dec87d0053ddd566e34d300135f7 39abdadc0b6a4cc7ea5129099c50c5d1b50df2c8 Robert Ogle <robertogle74@gmail.com> 1775225033 +0100	commit: Clean up for EAS build
+39abdadc0b6a4cc7ea5129099c50c5d1b50df2c8 83feebe4abb6e20946871a60ccc31aaa5ed6a009 Robert Ogle <robertogle74@gmail.com> 1775225276 +0100	commit: Final pre-build commit with .easignore

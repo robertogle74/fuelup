@@ -1,0 +1,40 @@
+{
+  "cli": {
+    "version": ">= 18.4.0",
+    "requireCommit": true,
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal"
+    },
+    "production": {
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "autoIncrement": true
+    }
+  },
+  "submit": {
+    "production": {}
+  },
+  "extra": {
+    "eas": {
+      "projectId": "ce633c57-bbcd-4f92-a21d-6190e48ac8c9"
+    }
+  },
+  "expo": {
+    "android": {
+      "package": "com.robertogle74.fuelup"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ce633c57-bbcd-4f92-a21d-6190e48ac8c9"
+      }
+    }
+  }
+}

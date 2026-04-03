@@ -1,0 +1,11 @@
+# Ignore AI assistant agent directories
+.agents/
+.claude/
+.codebuddy/
+.cursor/
+.windsurf/
+.github/
+
+# Ignore system files
+.DS_Store
+Thumbs.db
