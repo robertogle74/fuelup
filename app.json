@@ -29,7 +29,8 @@
   },
   "expo": {
     "android": {
-      "package": "com.robertogle74.fuelup"
+      "package": "com.robertogle74.fuelup",
+      "versionCode": 2
     },
     "extra": {
       "eas": {
