@@ -70,6 +70,7 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [priceAction, setPriceAction] = useState(null);
 
   const radiusTimeout = useRef(null);
   const priceCache = useRef(new Map());
@@ -778,38 +779,65 @@ export default function HomeScreen() {
                   </Text>
                 </View>
 
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10 }}>
+                <View style={{ flexDirection: 'column', gap: 10 }}>
+                  {/* NAVIGATE button - full width */}
                   <TouchableOpacity
                     onPress={() => {
                       const lat = place.geometry.location.lat;
                       const lng = place.geometry.location.lng;
                       Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`);
                     }}
-                    style={{ flex: 1, backgroundColor: '#2196F3', padding: 12, borderRadius: 8 }}
+                    style={{ backgroundColor: '#2196F3', padding: 12, borderRadius: 8 }}
                   >
-                    <Text style={{ color: 'white', textAlign: 'center', fontWeight: '600' }}>NAVIGATE</Text>
+                    <Text style={{ color: 'white', textAlign: 'center', fontWeight: '600' }}>🗺️ NAVIGATE</Text>
                   </TouchableOpacity>
 
-                  <TouchableOpacity
-                    onPress={() => {
-                      if (user) {
-                        const d = getLatest(place, "diesel");
-                        const p = getLatest(place, "petrol");
-                        setSelectedPlace(place);
-                        setDieselPrice(d && d.price !== undefined ? d.price.toFixed(2) : "");
-                        setPetrolPrice(p && p.price !== undefined ? p.price.toFixed(2) : "");
-                        setDieselAvailable(d ? d.available : true);
-                        setPetrolAvailable(p ? p.available : true);
-                        setShowModal(true);
-                      } else {
-                        setPendingUpdatePlace(place);
-                        setShowLoginModal(true);
-                      }
-                    }}
-                    style={{ flex: 1, backgroundColor: '#f87171', padding: 12, borderRadius: 8 }}
-                  >
-                    <Text style={{ color: 'white', textAlign: 'center', fontWeight: '600' }}>CONFIRM PRICES</Text>
-                  </TouchableOpacity>
+                  {/* Two buttons row for Submit and Confirm */}
+                  <View style={{ flexDirection: 'row', gap: 10 }}>
+                    <TouchableOpacity
+                      onPress={() => {
+                        if (user) {
+                          setPriceAction("submit");
+                          const d = getLatest(place, "diesel");
+                          const p = getLatest(place, "petrol");
+                          setSelectedPlace(place);
+                          setDieselPrice(d && d.price !== undefined ? d.price.toFixed(2) : "");
+                          setPetrolPrice(p && p.price !== undefined ? p.price.toFixed(2) : "");
+                          setDieselAvailable(d ? d.available : true);
+                          setPetrolAvailable(p ? p.available : true);
+                          setShowModal(true);
+                        } else {
+                          setPendingUpdatePlace(place);
+                          setShowLoginModal(true);
+                        }
+                      }}
+                      style={{ flex: 1, backgroundColor: '#f59e0b', padding: 12, borderRadius: 8 }}
+                    >
+                      <Text style={{ color: 'white', textAlign: 'center', fontWeight: '600' }}>📝 Submit Price</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() => {
+                        if (user) {
+                          setPriceAction("confirm");
+                          const d = getLatest(place, "diesel");
+                          const p = getLatest(place, "petrol");
+                          setSelectedPlace(place);
+                          setDieselPrice(d && d.price !== undefined ? d.price.toFixed(2) : "");
+                          setPetrolPrice(p && p.price !== undefined ? p.price.toFixed(2) : "");
+                          setDieselAvailable(d ? d.available : true);
+                          setPetrolAvailable(p ? p.available : true);
+                          setShowModal(true);
+                        } else {
+                          setPendingUpdatePlace(place);
+                          setShowLoginModal(true);
+                        }
+                      }}
+                      style={{ flex: 1, backgroundColor: '#10b981', padding: 12, borderRadius: 8 }}
+                    >
+                      <Text style={{ color: 'white', textAlign: 'center', fontWeight: '600' }}>✓ Confirm Price</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             );
@@ -828,7 +856,9 @@ export default function HomeScreen() {
                 style={{ position: 'absolute', width: '100%', height: '100%' }}
               />
               <View style={{ backgroundColor: '#1A1F2E', padding: 20, borderRadius: 10, width: '85%' }}>
-                <Text style={{ color: 'white', fontSize: 18 }}>Update Prices</Text>
+                <Text style={{ color: 'white', fontSize: 18 }}>
+                  {priceAction === "submit" ? "📝 Submit New Price" : "✓ Confirm Existing Price"}
+                </Text>
                 <Text style={{ color: '#15803d', marginTop: 10 }}>{selectedPlace?.name}</Text>
 
                 <Text style={{ color: '#94a3b8', marginTop: 20 }}>Diesel</Text>
@@ -911,48 +941,94 @@ export default function HomeScreen() {
                     const petrolId = `${selectedPlace.place_id}_petrol`;
 
                     try {
-                      await setDoc(doc(db, COLLECTION, dieselId), {
+                      // Get existing prices to track changes
+                      const existingDieselDoc = await getDoc(doc(db, COLLECTION, dieselId));
+                      const existingPetrolDoc = await getDoc(doc(db, COLLECTION, petrolId));
+
+                      const now = new Date();
+
+                      // Prepare diesel data with action tracking
+                      const dieselData = {
                         name: selectedPlace.name,
                         place_id: selectedPlace.place_id,
                         fuelType: "diesel",
                         price: parseFloat(dieselPrice || "0"),
                         available: dieselAvailable,
-                        timestamp: new Date(),
+                        timestamp: now,
                         updatedBy: user?.uid,
-                        updatedByDisplayName: userDisplayName
-                      }, { merge: true });
+                        updatedByDisplayName: userDisplayName,
+                        action: priceAction, // "submit" or "confirm"
+                      };
 
-                      await setDoc(doc(db, COLLECTION, petrolId), {
+                      // If price changed, save previous price
+                      if (existingDieselDoc.exists() && existingDieselDoc.data().price !== parseFloat(dieselPrice || "0")) {
+                        dieselData.previousPrice = existingDieselDoc.data().price;
+                        dieselData.previousUpdater = existingDieselDoc.data().updatedByDisplayName;
+                      }
+
+                      // Prepare petrol data with action tracking
+                      const petrolData = {
                         name: selectedPlace.name,
                         place_id: selectedPlace.place_id,
                         fuelType: "petrol",
                         price: parseFloat(petrolPrice || "0"),
                         available: petrolAvailable,
-                        timestamp: new Date(),
+                        timestamp: now,
                         updatedBy: user?.uid,
-                        updatedByDisplayName: userDisplayName
-                      }, { merge: true });
+                        updatedByDisplayName: userDisplayName,
+                        action: priceAction, // "submit" or "confirm"
+                      };
 
+                      // If price changed, save previous price
+                      if (existingPetrolDoc.exists() && existingPetrolDoc.data().price !== parseFloat(petrolPrice || "0")) {
+                        petrolData.previousPrice = existingPetrolDoc.data().price;
+                        petrolData.previousUpdater = existingPetrolDoc.data().updatedByDisplayName;
+                      }
+
+                      // Save to Firestore
+                      await setDoc(doc(db, COLLECTION, dieselId), dieselData, { merge: true });
+                      await setDoc(doc(db, COLLECTION, petrolId), petrolData, { merge: true });
+
+                      // Update user's stats
                       if (user) {
                         await updateDoc(doc(db, 'users', user.uid), {
-                          totalUpdates: increment(1)
+                          totalUpdates: increment(1),
+                          lastUpdateAction: priceAction,
+                          lastUpdateTimestamp: now
                         });
                       }
 
+                      // Different success message based on action
+                      const successMessage = priceAction === "submit"
+                        ? "Price submitted successfully! It will be reviewed by admins."
+                        : "Price confirmed successfully! Thank you for your contribution.";
+
                       setShowModal(false);
-                      Alert.alert("Success", "Fuel prices updated successfully!");
+                      Alert.alert("Success", successMessage);
+
+                      // Reset price action
+                      setPriceAction(null);
+
                     } catch (error) {
                       Alert.alert("Error", "Failed to save: " + error.message);
                     }
                   }}
-                  style={{ backgroundColor: '#15803d', padding: 12, marginTop: 20, borderRadius: 5 }}
+                  style={{
+                    backgroundColor: priceAction === "submit" ? '#f59e0b' : '#10b981',
+                    padding: 12,
+                    marginTop: 20,
+                    borderRadius: 5
+                  }}
                 >
-                  <Text style={{ color: 'white', textAlign: 'center', fontWeight: 'bold' }}>SAVE & CLOSE</Text>
+                  <Text style={{ color: 'white', textAlign: 'center', fontWeight: 'bold' }}>
+                    {priceAction === "submit" ? "📝 SUBMIT PRICE" : "✓ CONFIRM PRICE"}
+                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   onPress={() => {
                     setShowModal(false);
+                    setPriceAction(null); // ← ADD THIS LINE
                   }}
                   style={{ backgroundColor: '#b91c1c', padding: 12, marginTop: 10, borderRadius: 5 }}
                 >
