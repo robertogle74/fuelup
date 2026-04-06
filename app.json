@@ -1,0 +1,67 @@
+{
+  "expo": {
+    "name": "FuelUp",
+    "slug": "fuelup",
+    "version": "20.1.2",
+    "orientation": "portrait",
+    "icon": "./assets/icon-full.png",
+    "scheme": "fuelup",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "icon": "./assets/icon-full.png",
+      "bundleIdentifier": "com.robertogle74.fuelup"
+    },
+    "android": {
+      "package": "com.robertogle74.fuelup",
+      "versionCode": 34,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon-foreground.png",
+        "backgroundColor": "#0B0F1A"
+      },
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyC2H66I29MVX4KnHGfj5xDEhjeXSC9_wgc"
+        }
+      }
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/icon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#0B0F1A"
+        }
+      ],
+      "expo-web-browser",
+      "expo-localization",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow FuelUp to access your location to find nearby fuel stations."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ce633c57-bbcd-4f92-a21d-6190e48ac8c9"
+      }
+    },
+    "owner": "robertogle74"
+  }
+}
