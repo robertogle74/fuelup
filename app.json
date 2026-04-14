@@ -15,7 +15,7 @@
     },
     "android": {
       "package": "com.robertogle74.fuelup",
-      "versionCode": 39,
+      "versionCode": 40,
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"

@@ -93,8 +93,8 @@ android {
         applicationId 'com.robertogle74.fuelup'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 38
-        versionName "20.1.2"
+        versionCode 40
+        versionName "20.1.3"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
     }
