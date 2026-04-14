@@ -1,5 +1,5 @@
 // Google Places API key
-const API_KEY = 'AIzaSyDHCI1TrExTmvtFqkRu7rLXJbdvkxsj5L0';
+const API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 
 // Original function - gets up to 20 garages (fast)
 export const getNearbyStations = async (lat: number, lng: number, radius: number) => {

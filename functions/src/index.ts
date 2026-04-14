@@ -3,7 +3,7 @@ import * as functions from 'firebase-functions';
 
 admin.initializeApp();
 
-const GOOGLE_PLACES_API_KEY = 'AIzaSyCKN-E8wh4_f8zZ1wmiFcXgJ4VeHBMtAPA';
+const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 
 export const getNearbyStations = functions.https.onCall(async (data, context) => {
   // Require user to be logged in

@@ -5,7 +5,7 @@ import { getFirestore } from 'firebase/firestore';
 import { getFunctions } from 'firebase/functions';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCtoXToX5JwHIMvHoiW3489SZlc2wlxi3s",
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
   authDomain: "fuelup-bf98e.firebaseapp.com",
   projectId: "fuelup-bf98e",
   storageBucket: "fuelup-bf98e.appspot.com",
