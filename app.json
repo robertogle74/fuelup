@@ -15,13 +15,13 @@
     },
     "android": {
       "package": "com.robertogle74.fuelup",
-      "versionCode": 50,
+      "versionCode": 52,
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"
       ],
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon-foreground.png",
+        "foregroundImage": "./assets/icon-full.png",
         "backgroundColor": "#0B0F1A"
       },
       "config": {
