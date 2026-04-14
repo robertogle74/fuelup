@@ -15,7 +15,7 @@
     },
     "android": {
       "package": "com.robertogle74.fuelup",
-      "versionCode": 46,
+      "versionCode": 47,
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION"
@@ -26,7 +26,7 @@
       },
       "config": {
         "googleMaps": {
-          "apiKey": "AIzaSyC2H66I29MVX4KnHGfj5xDEhjeXSC9_wgc"
+          "apiKey": "process.env.EXPO_PUBLIC_GOOGLE_MAPS_ANDROID_KEY"
         }
       }
     },
