@@ -20,3 +20,4 @@ expo-env.d.ts
 android/app/google-services.json
 ios/GoogleService-Info.plist
 '@ | Out-File -FilePath .gitignore -Encoding UTF8 -Force
+/android
