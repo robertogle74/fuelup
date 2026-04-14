@@ -20,9 +20,9 @@ import {
 } from 'react-native';
 
 import MapView, { Marker } from 'react-native-maps';
-import { auth, db } from '../../firebase';
-import LoginModal from '../LoginModal';
-import { getNearbyStations as getSecureNearbyStations } from '../services/api';
+import { auth, db } from '../firebase';
+import LoginModal from './LoginModal';
+import { getNearbyStations as getSecureNearbyStations } from './services/api';
 
 const IS_DEV = __DEV__;
 
@@ -36,7 +36,7 @@ const Divider = () => (
   />
 );
 
-const IS_LIVE = false;
+const IS_LIVE = true;
 const COLLECTION = IS_LIVE ? "fuel" : "fuel_test";
 
 if (IS_DEV) {

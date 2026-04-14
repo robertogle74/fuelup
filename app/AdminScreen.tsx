@@ -4,7 +4,7 @@ import { ActivityIndicator, Alert, FlatList, Linking, ScrollView, StyleSheet, Te
 import { auth, db } from '../firebase';
 
 // Add this near the top of AdminScreen.js
-const IS_LIVE = false; // Change this to true for production
+const IS_LIVE = true; // Change this to true for production
 const COLLECTION = IS_LIVE ? "fuel" : "fuel_test";
 
 // Optional: Add a visual indicator

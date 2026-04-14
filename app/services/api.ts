@@ -72,4 +72,4 @@ export const getAllNearbyStations = async (lat: number, lng: number, radius: num
 };
 
 // Export default to silence the warning
-export default null;
+export default {};

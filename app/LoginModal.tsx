@@ -3,7 +3,7 @@ import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, sendPasswordResetEmail, signInWithCredential, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ActivityIndicator, Alert, Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { auth, db } from '../firebase';
 
@@ -44,7 +44,7 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
   const [isResetMode, setIsResetMode] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   // Google Sign-In state
   const [googleLoading, setGoogleLoading] = useState(false);
   const [pendingGoogleUser, setPendingGoogleUser] = useState(null);
@@ -53,17 +53,15 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
 
   // Google OAuth configuration
   const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: '240348590748-83enlmubg4jddaemtd5e35uu0ohj6c2k.apps.googleusercontent.com',
-    iosClientId: '',
-    expoClientId: '240348590748-mrg3iqhfattsfuedcn1uf3uro2ejbbbu.apps.googleusercontent.com',
+    androidClientId: '240348590748-83enlmubg4jddaemtd5e35uu0ohj6c2k.apps.googleusercontent.com',  // Note: 240 not 248!
+    webClientId: '240348590748-mrg3iqhfattsfuedcn1uf3uro2ejbbbu.apps.googleusercontent.com',
     redirectUri: makeRedirectUri({
-      scheme: 'fuelup',
       useProxy: true,
     }),
   });
 
-  // Handle Google Sign-In response
-  useState(() => {
+  // Handle Google Sign-In response - CHANGE FROM useState to useEffect
+  useEffect(() => {
     if (response?.type === 'success') {
       setGoogleLoading(true);
       const { id_token } = response.params;
@@ -71,7 +69,7 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
       signInWithCredential(auth, credential)
         .then(async (userCredential) => {
           const user = userCredential.user;
-          
+
           // Check if user is blocked
           const userDoc = await getDoc(doc(db, 'users', user.uid));
           if (userDoc.exists() && userDoc.data().blocked === true) {
@@ -80,7 +78,7 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
             setGoogleLoading(false);
             return;
           }
-          
+
           // If new user, ask for display name
           if (!userDoc.exists()) {
             setPendingGoogleUser(user);
@@ -88,7 +86,7 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
             setGoogleLoading(false);
             return;
           }
-          
+
           // Existing user - check if they have a display name
           if (!userDoc.data().displayName) {
             setPendingGoogleUser(user);
@@ -96,7 +94,7 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
             setGoogleLoading(false);
             return;
           }
-          
+
           onLoginSuccess(user);
           onClose();
         })
@@ -116,11 +114,11 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
       Alert.alert('Invalid Display Name', validation.message);
       return;
     }
-    
+
     setLoading(true);
     try {
       const isAdmin = ADMIN_EMAILS.includes(pendingGoogleUser.email);
-      
+
       await setDoc(doc(db, 'users', pendingGoogleUser.uid), {
         email: pendingGoogleUser.email,
         displayName: tempDisplayName.trim(),
@@ -130,7 +128,7 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
         lastActive: new Date(),
         isAdmin: isAdmin
       });
-      
+
       onLoginSuccess(pendingGoogleUser);
       setShowNameModal(false);
       setTempDisplayName('');
@@ -173,14 +171,14 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
     setLoading(true);
     try {
       let userCredential;
-      
+
       if (isSignUp) {
         // Create new account
         userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        
+
         // Check if this email should be admin
         const isAdmin = ADMIN_EMAILS.includes(email);
-        
+
         // Add user to Firestore with display name
         await setDoc(doc(db, 'users', userCredential.user.uid), {
           email: userCredential.user.email,
@@ -194,7 +192,7 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
       } else {
         // Sign in existing user
         userCredential = await signInWithEmailAndPassword(auth, email, password);
-        
+
         // Check if user is blocked
         const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
         if (userDoc.exists() && userDoc.data().blocked === true) {
@@ -203,13 +201,13 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
           setLoading(false);
           return;
         }
-        
+
         // Update last active
         await updateDoc(doc(db, 'users', userCredential.user.uid), {
           lastActive: new Date()
         });
       }
-      
+
       onLoginSuccess(userCredential.user);
       onClose();
       setEmail('');
@@ -238,7 +236,7 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
       Alert.alert('Error', 'Please enter your email address');
       return;
     }
-    
+
     setLoading(true);
     try {
       await sendPasswordResetEmail(auth, resetEmail);
@@ -339,7 +337,7 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
               <ActivityIndicator color="white" />
             ) : (
               <>
-                <Image 
+                <Image
                   source={{ uri: 'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg' }}
                   style={styles.googleIcon}
                 />

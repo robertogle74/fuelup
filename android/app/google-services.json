@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "240348590748",
+    "firebase_url": "https://fuelup-bf98e-default-rtdb.firebaseio.com",
+    "project_id": "fuelup-bf98e",
+    "storage_bucket": "fuelup-bf98e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:240348590748:android:76ed82299b78529b0f3359",
+        "android_client_info": {
+          "package_name": "com.robertogle74.fuelup"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "240348590748-83enlmubg4jddaemtd5e35uu0ohj6c2k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.robertogle74.fuelup",
+            "certificate_hash": "6578d3dd5ac7d6e813c359263d4da6c7c10703e8"
+          }
+        },
+        {
+          "client_id": "240348590748-mrg3iqhfattsfeudcn1uf3uro2ejbbbu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCMhde_rY1MwtxFGxo3YwraeFApqPyP_ug"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "240348590748-mrg3iqhfattsfeudcn1uf3uro2ejbbbu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
