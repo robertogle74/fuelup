@@ -16,3 +16,9 @@ yarn-error.log*
 expo-env.d.ts
 # @end expo-cliandroid/app/google-services.json
 *.json
+*.env
+*.pem
+*.key
+android/app/google-services.json
+ios/GoogleService-Info.plist
+android/app/google-services.json
