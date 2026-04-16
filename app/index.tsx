@@ -22,7 +22,7 @@ import {
 import MapView, { Marker } from 'react-native-maps';
 import { auth, db } from '../firebase';
 import LoginModal from './LoginModal';
-import { getNearbyStations as getSecureNearbyStations } from './services/api';
+import { getNearbyStations as getSecureNearbyStations } from './services/api.ts';
 
 const IS_DEV = __DEV__;
 

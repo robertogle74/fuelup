@@ -1,13 +1,10 @@
-import { makeRedirectUri } from 'expo-auth-session';
-import * as Google from 'expo-auth-session/providers/google';
-import * as WebBrowser from 'expo-web-browser';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, sendPasswordResetEmail, signInWithCredential, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { useState, useEffect } from 'react';
 import { ActivityIndicator, Alert, Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { auth, db } from '../firebase';
 
-WebBrowser.maybeCompleteAuthSession();
 
 // Profanity filter (basic)
 const badWords = ['fuck', 'shit', 'ass', 'bitch', 'cunt', 'damn', 'hell', 'nigga', 'nigger'];
@@ -51,62 +48,68 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
   const [showNameModal, setShowNameModal] = useState(false);
   const [tempDisplayName, setTempDisplayName] = useState('');
 
-  // Google OAuth configuration
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId: '240348590748-83enlmubg4jddaemtd5e35uu0ohj6c2k.apps.googleusercontent.com',  // Note: 240 not 248!
-    webClientId: '240348590748-mrg3iqhfattsfuedcn1uf3uro2ejbbbu.apps.googleusercontent.com',
-    redirectUri: makeRedirectUri({
-      useProxy: true,
-    }),
-  });
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId: '240348590748-mrg3iqhfattsfeudcn1uf3uro2ejbbbu.apps.googleusercontent.com',
+      offlineAccess: true,
+    });
+  }, []);
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setGoogleLoading(true);
+
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      const { idToken } = await GoogleSignin.getTokens();
+
+      const credential = GoogleAuthProvider.credential(idToken);
+
+      const userCredential = await signInWithCredential(auth, credential);
+      const user = userCredential.user;
+
+      // Check if user is blocked
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists() && userDoc.data().blocked === true) {
+        Alert.alert('Account Blocked', 'This account has been blocked.');
+        await auth.signOut();
+        setGoogleLoading(false);
+        return;
+      }
+
+      // If new user, ask for display name
+      if (!userDoc.exists()) {
+        setPendingGoogleUser(user);
+        setShowNameModal(true);
+        setGoogleLoading(false);
+        return;
+      }
+
+      // Existing user without display name
+      if (!userDoc.data().displayName) {
+        setPendingGoogleUser(user);
+        setShowNameModal(true);
+        setGoogleLoading(false);
+        return;
+      }
+
+      await updateDoc(doc(db, 'users', user.uid), {
+        lastActive: new Date()
+      });
+
+      onLoginSuccess(user);
+      onClose();
+
+    } catch (error) {
+      console.log('Google Sign-In Error:', error);
+      Alert.alert('Login Failed', 'Google sign-in failed');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   // Handle Google Sign-In response - CHANGE FROM useState to useEffect
-  useEffect(() => {
-    if (response?.type === 'success') {
-      setGoogleLoading(true);
-      const { id_token } = response.params;
-      const credential = GoogleAuthProvider.credential(id_token);
-      signInWithCredential(auth, credential)
-        .then(async (userCredential) => {
-          const user = userCredential.user;
 
-          // Check if user is blocked
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
-          if (userDoc.exists() && userDoc.data().blocked === true) {
-            Alert.alert('Account Blocked', 'This account has been blocked.');
-            await auth.signOut();
-            setGoogleLoading(false);
-            return;
-          }
-
-          // If new user, ask for display name
-          if (!userDoc.exists()) {
-            setPendingGoogleUser(user);
-            setShowNameModal(true);
-            setGoogleLoading(false);
-            return;
-          }
-
-          // Existing user - check if they have a display name
-          if (!userDoc.data().displayName) {
-            setPendingGoogleUser(user);
-            setShowNameModal(true);
-            setGoogleLoading(false);
-            return;
-          }
-
-          onLoginSuccess(user);
-          onClose();
-        })
-        .catch((error) => {
-          console.error('Google login error:', error);
-          Alert.alert('Login Failed', error.message);
-        })
-        .finally(() => {
-          setGoogleLoading(false);
-        });
-    }
-  }, [response]);
 
   const completeGoogleSignUp = async () => {
     const validation = validateDisplayName(tempDisplayName);
@@ -330,7 +333,7 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
           {/* Google Sign-In Button */}
           <TouchableOpacity
             style={[styles.googleButton, googleLoading && styles.buttonDisabled]}
-            onPress={() => promptAsync()}
+            onPress={handleGoogleSignIn}
             disabled={googleLoading}
           >
             {googleLoading ? (
