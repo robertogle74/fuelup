@@ -605,9 +605,11 @@ export default function HomeScreen() {
             </>
           )}
 
-          <Text style={{ color: '#ffaa00', fontSize: 12, marginTop: 5 }}>
-            Database: {COLLECTION} {IS_LIVE ? "(LIVE)" : "(TEST)"}
-          </Text>
+          {__DEV__ && (
+            <Text style={{ color: '#ffaa00', fontSize: 12, marginTop: 5 }}>
+              Database: {COLLECTION} {IS_LIVE ? "(LIVE)" : "(TEST)"}
+            </Text>
+          )}
 
           <Text style={{ color: 'white', marginTop: 15 }}>Choose Radius (km):</Text>
           <TextInput
