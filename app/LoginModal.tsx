@@ -50,8 +50,9 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
 
   useEffect(() => {
     GoogleSignin.configure({
-      webClientId: '240348590748-mrg3iqhfattsfeudcn1uf3uro2ejbbbu.apps.googleusercontent.com',
+      webClientId: '240348590748-9pb57m2nk5k8cn8cu5av2i4dm08mnuk1.apps.googleusercontent.com',
       offlineAccess: true,
+      forceCodeForRefreshToken: true,
     });
   }, []);
 
@@ -59,13 +60,33 @@ export default function LoginModal({ visible, onClose, onLoginSuccess }) {
     try {
       setGoogleLoading(true);
 
+      console.log("🔵 Step 1: Checking Play Services...");
       await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-      const { idToken } = await GoogleSignin.getTokens();
+      console.log("✅ Play Services OK");
 
+      console.log("🔵 Step 2: Starting Google Sign-In...");
+      const userInfo = await GoogleSignin.signIn();
+      console.log("✅ userInfo:", userInfo);
+
+      console.log("🔵 Step 3: Getting tokens...");
+      const tokens = await GoogleSignin.getTokens();
+      console.log("✅ tokens:", tokens);
+
+      const { idToken } = tokens;
+
+      if (!idToken) {
+        console.log("❌ ID TOKEN IS MISSING");
+        throw new Error("No ID token returned");
+      }
+
+      console.log("🔵 Step 4: Creating Firebase credential...");
       const credential = GoogleAuthProvider.credential(idToken);
 
+      console.log("🔵 Step 5: Signing into Firebase...");
       const userCredential = await signInWithCredential(auth, credential);
+      console.log("✅ Firebase success:", userCredential);
+
+      // --- keep your existing logic below ---
       const user = userCredential.user;
 
       // Check if user is blocked

@@ -1,3 +1,9 @@
+import { LogBox } from 'react-native';
+
+ErrorUtils.setGlobalHandler((error, isFatal) => {
+  console.log("🔥 GLOBAL ERROR:", error);
+});
+
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -44,6 +50,7 @@ if (IS_DEV) {
 }
 
 export default function HomeScreen() {
+  console.log("📱 APP STARTED");
 
   const router = useRouter();
 
